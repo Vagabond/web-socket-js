@@ -11,6 +11,8 @@ import flash.external.*;
 import flash.net.*;
 import flash.system.*;
 import flash.utils.*;
+import flash.utils.Timer;
+import flash.events.TimerEvent;
 import mx.core.*;
 import mx.controls.*;
 import mx.events.*;
@@ -54,6 +56,7 @@ public class WebSocket extends EventDispatcher {
   private var headers:String;
   private var noiseChars:Array;
   private var expectedDigest:String;
+  private var socketTimeout:Timer = new Timer(5000, 1);
 
   public function WebSocket(
       main:WebSocketMain, url:String, protocol:String,
@@ -104,6 +107,8 @@ public class WebSocket extends EventDispatcher {
     rawSocket.addEventListener(IOErrorEvent.IO_ERROR, onSocketIoError);
     rawSocket.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onSocketSecurityError);
     rawSocket.connect(host, port);
+    socketTimeout.start();
+    socketTimeout.addEventListener(TimerEvent.TIMER_COMPLETE, socketTimedout);
   }
   
   public function send(encData:String):int {
@@ -154,6 +159,7 @@ public class WebSocket extends EventDispatcher {
   
   private function onSocketConnect(event:Event):void {
     main.log("connected");
+    socketTimeout.stop();
 
     if (scheme == "wss") {
       main.log("starting SSL/TLS");
@@ -450,6 +456,10 @@ public class WebSocket extends EventDispatcher {
       output += bytes.charCodeAt(i).toString() + ", ";
     }
     main.log(output);
+  }
+
+  private function socketTimedout(e:TimerEvent):void {
+    onError("Timed out trying to connect");
   }
   
 }
