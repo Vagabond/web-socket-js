@@ -92,7 +92,7 @@ public class WebSocket extends EventDispatcher {
         tlsConfig= new TLSConfig(TLSEngine.CLIENT,
             null, null, null, null, null,
             TLSSecurityParameters.PROTOCOL_VERSION);
-        tlsConfig.trustSelfSignedCertificates = true;
+        tlsConfig.trustAllCertificates = true;
         tlsConfig.ignoreCommonNameMismatch = true;
         tlsSocket = new TLSSocket();
         tlsSocket.addEventListener(ProgressEvent.SOCKET_DATA, onSocketData);
@@ -315,6 +315,7 @@ public class WebSocket extends EventDispatcher {
       return false;
     }
     var header:Object = {};
+    var lowerHeader:Object = {};
     for (var i:int = 1; i < lines.length; ++i) {
       if (lines[i].length == 0) continue;
       var m:Array = lines[i].match(/^(\S+): (.*)$/);
@@ -322,18 +323,19 @@ public class WebSocket extends EventDispatcher {
         onError("failed to parse response header line: " + lines[i]);
         return false;
       }
-      header[m[1]] = m[2];
+      header[m[1].toLowerCase()] = m[2];
+      lowerHeader[m[1].toLowerCase()] = m[2].toLowerCase();
     }
-    if (header["Upgrade"] != "WebSocket") {
+    if (lowerHeader["upgrade"] != "websocket") {
       onError("invalid Upgrade: " + header["Upgrade"]);
       return false;
     }
-    if (header["Connection"] != "Upgrade") {
+    if (lowerHeader["connection"] != "upgrade") {
       onError("invalid Connection: " + header["Connection"]);
       return false;
     }
-    if (!header["Sec-WebSocket-Origin"]) {
-      if (header["WebSocket-Origin"]) {
+    if (!lowerHeader["sec-websocket-origin"]) {
+      if (lowerHeader["websocket-origin"]) {
         onError(
           "The WebSocket server speaks old WebSocket protocol, " +
           "which is not supported by web-socket-js. " +
@@ -344,14 +346,14 @@ public class WebSocket extends EventDispatcher {
       }
       return false;
     }
-    var resOrigin:String = header["Sec-WebSocket-Origin"].toLowerCase();
+    var resOrigin:String = lowerHeader["sec-websocket-origin"];
     if (resOrigin != origin) {
       onError("origin doesn't match: '" + resOrigin + "' != '" + origin + "'");
       return false;
     }
-    if (protocol && header["Sec-WebSocket-Protocol"] != protocol) {
+    if (protocol && header["sec-websocket-protocol"] != protocol) {
       onError("protocol doesn't match: '" +
-        header["WebSocket-Protocol"] + "' != '" + protocol + "'");
+        header["websocket-protocol"] + "' != '" + protocol + "'");
       return false;
     }
     return true;
