@@ -41,9 +41,9 @@ public class WebSocketMain extends Sprite {
       url:String, protocol:String,
       proxyHost:String = null, proxyPort:int = 0,
       headers:String = null):WebSocket {
-    if (!manualPolicyFileLoaded) {
-      loadDefaultPolicyFile(url);
-    }
+    //if (!manualPolicyFileLoaded) {
+    //  loadDefaultPolicyFile(url);
+    //}
     return new WebSocket(this, url, protocol, proxyHost, proxyPort, headers);
   }
 
